@@ -55,15 +55,16 @@ class Blockchain {
     _addBlock(block) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            const height = self.getChainHeight();
+            const height = self.height;
             block.height = height;
             if(height > 0) block.previousBlockHash = self.chain[height-1].hash;
             block.time = new Date().getTime().toString().slice(0,-3);
             // Omit the hash attribute from the hashing procedure
             const {hash, ...hashableParams} = block;
             block.hash = SHA256(JSON.stringify(hashableParams)).toString();
-            self.chain.push(newBlock);
+            self.chain.push(block);
             self.height++;
+            resolve(block);
         });
     }
 
@@ -99,12 +100,15 @@ class Blockchain {
      * @param {*} star 
      */
     submitStar(address, message, signature, star) {
+        const self = this;
         return new Promise(async (resolve, reject) => {
             const time = parseInt(message.split(':')[1]);
             const currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
             if(currentTime - time < 300) reject(Error('Not enough time has ellapsed.'));
             if(!bitcoinMessage.verify(message, address, signature))reject(Error('Invalid message.'));
-            resolve(new Block({address, star}));
+            const block = new Block({address, star});
+            
+            self._addBlock(block).then(resolve).catch(reject);
         });
     }
 

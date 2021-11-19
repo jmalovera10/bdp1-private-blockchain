@@ -1,5 +1,12 @@
 # Private Blockchain Application
 
+## Requisites
+
+- Node 17.1.0
+- npm 8.1.2
+
+## Description
+
 You are starting your journey as a Blockchain Developer, this project allows you to demonstrate
 that you are familiarized with the fundamentals concepts of a Blockchain platform.
 Concepts like:

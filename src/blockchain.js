@@ -9,7 +9,7 @@
  */
 
 const SHA256 = require('crypto-js/sha256');
-const BlockClass = require('./block.js');
+const {Block} = require('./block.js');
 const bitcoinMessage = require('bitcoinjs-message');
 
 class Blockchain {
@@ -24,7 +24,7 @@ class Blockchain {
      */
     constructor() {
         this.chain = [];
-        this.height = -1;
+        this.height = 0;
         this.initializeChain();
     }
 
@@ -34,19 +34,10 @@ class Blockchain {
      * Passing as a data `{data: 'Genesis Block'}`
      */
     async initializeChain() {
-        if( this.height === -1){
-            let block = new BlockClass.Block({data: 'Genesis Block'});
+        if( this.height === 0){
+            let block = new Block({data: 'Genesis Block'});
             await this._addBlock(block);
         }
-    }
-
-    /**
-     * Utility method that return a Promise that will resolve with the height of the chain
-     */
-    getChainHeight() {
-        return new Promise((resolve, reject) => {
-            resolve(this.height);
-        });
     }
 
     /**
@@ -64,7 +55,15 @@ class Blockchain {
     _addBlock(block) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-           
+            const height = self.getChainHeight();
+            block.height = height;
+            if(height > 0) block.previousBlockHash = self.chain[height-1].hash;
+            block.time = new Date().getTime().toString().slice(0,-3);
+            // Omit the hash attribute from the hashing procedure
+            const {hash, ...hashableParams} = block;
+            block.hash = SHA256(JSON.stringify(hashableParams)).toString();
+            self.chain.push(newBlock);
+            self.height++;
         });
     }
 
@@ -78,7 +77,7 @@ class Blockchain {
      */
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
-            
+            resolve(`${address}:${new Date().getTime().toString().slice(0,-3)}:starRegistry`);
         });
     }
 
@@ -100,9 +99,12 @@ class Blockchain {
      * @param {*} star 
      */
     submitStar(address, message, signature, star) {
-        let self = this;
         return new Promise(async (resolve, reject) => {
-            
+            const time = parseInt(message.split(':')[1]);
+            const currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
+            if(currentTime - time < 300) reject(Error('Not enough time has ellapsed.'));
+            if(!bitcoinMessage.verify(message, address, signature))reject(Error('Invalid message.'));
+            resolve(new Block({address, star}));
         });
     }
 
@@ -115,7 +117,9 @@ class Blockchain {
     getBlockByHash(hash) {
         let self = this;
         return new Promise((resolve, reject) => {
-           
+           resolve(self.chain.find((block)=>{
+                return block.hash == hash;
+           }))
         });
     }
 
@@ -146,7 +150,11 @@ class Blockchain {
         let self = this;
         let stars = [];
         return new Promise((resolve, reject) => {
-            
+            resolve(self.chain.filter((block)=>{
+                return block.getBData().address = address;
+            }).map((block)=>{
+                return block.getBData().star
+            }))
         });
     }
 
@@ -160,7 +168,12 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            
+            for(let i= 0; i<self.chain.length; i++){
+                const currentBlock = self.chain[i];
+                if(!currentBlock.validate()) errorLog.push(`Invalid block at height: ${currentBlock.height}`);
+                if(i>0  && currentBlock.previousBlockHash !== self.chain[i-1].hash) errorLog.push(`Invalid previous block hash at height: ${currentBlock.height}`);
+            }
+            resolve(errorLog);
         });
     }
 

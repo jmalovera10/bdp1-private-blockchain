@@ -2,7 +2,7 @@
   "name": "project_1",
   "version": "1.0.0",
   "description": "This project creates a Blockchain application to store data into the blocks",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -52,7 +52,7 @@ class Blockchain {
    * that this method is a private method.
    */
   _addBlock(block) {
-    let self = this;
+    const self = this;
     return new Promise(async (resolve, reject) => {
       try {
         const height = self.height;
@@ -171,10 +171,10 @@ class Blockchain {
       try {
         stars = self.chain
           .filter((block) => {
-            return (block.getBData().address = address);
+            return block.getBData()?.address === address;
           })
           .map((block) => {
-            return block.getBData().star;
+            return block.getBData()?.star;
           });
         resolve(stars);
       } catch (error) {

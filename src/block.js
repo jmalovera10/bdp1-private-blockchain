@@ -60,9 +60,9 @@ class Block {
    *     or Reject with an error.
    */
   getBData() {
-    if (self.height == 0) throw new Error("Can not retrieve data from the genesis block.");
+    if (this.height == 0) return null;
     // Getting the encoded data saved in the Block
-    const data = self.body;
+    const data = this.body;
     // Decoding the data to retrieve the JSON representation of the object
     const decodedData = hex2ascii(data);
     // Parse the data to an object to be retrieve.

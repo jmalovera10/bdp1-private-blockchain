@@ -195,7 +195,7 @@ class Blockchain {
     return new Promise(async (resolve, reject) => {
       for (let i = 0; i < self.chain.length; i++) {
         const currentBlock = self.chain[i];
-        if (!currentBlock.validate()) errorLog.push(`Invalid block at height: ${currentBlock.height}`);
+        if (!(await currentBlock.validate())) errorLog.push(`Invalid block at height: ${currentBlock.height}`);
         if (i > 0 && currentBlock.previousBlockHash !== self.chain[i - 1].hash)
           errorLog.push(`Invalid previous block hash at height: ${currentBlock.height}`);
       }
